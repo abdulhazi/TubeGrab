@@ -21,13 +21,20 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Unzip project
+        run: |
+          unzip -o -q TubeGrab.zip -d unzipped
+          GRADLEW=$(find unzipped -name gradlew | head -n 1)
+          if [ -z "$GRADLEW" ]; then echo "gradlew not found in zip"; exit 1; fi
+          echo "PROJECT_DIR=$(dirname "$GRADLEW")" >> $GITHUB_ENV
+
       - name: Build APK
         run: |
+          cd "$PROJECT_DIR"
           chmod +x gradlew
           ./gradlew assembleRelease --stacktrace
-          cp app/build/outputs/apk/release/*.apk TubeGrab.apk
+          cp app/build/outputs/apk/release/*.apk "$GITHUB_WORKSPACE/TubeGrab.apk"
 
-      # Publishes the APK as a GitHub Release so it downloads as a plain .apk (no zip)
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
